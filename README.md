@@ -10,7 +10,7 @@ A Findbuch using the output of https://github.com/fid-philosophie/BEACONaggregat
 
 ### run with
 ```
-ENV=production uvicorn app.main:app
+python -m uvicorn app.main:app --reload
 ```
 
 
