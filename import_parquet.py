@@ -1,14 +1,35 @@
 import duckdb
-from pymongo import MongoClient, InsertOne
+from pymongo import MongoClient, InsertOne, ASCENDING, DESCENDING
 
-PARQUET = "beacons_merged_20251215-1848.parquet"
+PARQUET = "beacons_merged_20251215-2025.parquet"
 MONGO_URI = "mongodb://localhost:27017"
 DB, COLL = "mydb", "mycollection"
 
 BATCH = 50_000  # tune: 10k–200k depending on row width / RAM
 
-client = MongoClient(MONGO_URI)
-collection = client[DB][COLL]
+
+# uri = "mongodb://root:example@localhost:27017/?authSource=admin"
+# client = MongoClient(
+#     host="localhost",
+#     port=27017,
+#     username="root",
+#     password="example",
+#     authSource="admin",
+# )
+
+uri = "mongodb://appuser:apppass@localhost:27017/mydb?authSource=mydb"
+client = MongoClient(uri)
+
+
+#collection = client["mydb"]["mycollection"]
+collection = client["mydb"]["records"]
+
+# flush existing records
+#collection.delete_many({})
+collection.drop()
+
+#client = MongoClient(MONGO_URI)
+#collection = client[DB][COLL]
 
 con = duckdb.connect()
 con.execute("PRAGMA threads=4")  # optional
@@ -33,3 +54,7 @@ while True:
 
     offset += BATCH
     print(f"Inserted {offset:,} rows")
+
+
+# single-field indexing
+collection.create_index([("authority_id", ASCENDING)], name="authority_id_idx")

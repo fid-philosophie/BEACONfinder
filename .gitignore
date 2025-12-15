@@ -18,6 +18,7 @@ build/
 
 # --- Project-specific data ---
 data/
+*.parquet
 
 # ignore .env
 .env
