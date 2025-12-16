@@ -1,5 +1,6 @@
 from datetime import datetime, date
 from typing import Optional
+
 from pydantic import BaseModel, Field
 
 
@@ -20,10 +21,15 @@ class Record(BaseModel):
     source_date: Optional[date] = None
     date_of_export: Optional[datetime] = None
 
+    # New columns you mentioned (optional; harmless even if absent in some docs)
+    beacon_uri: Optional[str] = None
+    beacon_harvest_timestamp: Optional[datetime] = None
+
     class Config:
         populate_by_name = True
 
-# GET single authority_id
+
+# GET single authority_id (legacy / optional if you still use it elsewhere)
 class QueryRequest(BaseModel):
     id: str
     strings: list[str] = Field(default_factory=list)
@@ -39,8 +45,14 @@ class QueryResponse(BaseModel):
 
 # POST batch authority_id
 class BatchAuthorityRequest(BaseModel):
-    authority_ids: list[str]
-    limit_per_id: int = 100
+    authority_ids: list[str] = Field(..., min_length=1, max_length=1000)
+    limit_per_id: int = Field(default=100, ge=1, le=500)
+
+    # NEW: exclusion list
+    exclude_beacon_uris: list[str] = Field(
+        default_factory=list,
+        description="Exclude rows where beacon_uri is in this list.",
+    )
 
     model_config = {
         "json_schema_extra": {
@@ -52,11 +64,19 @@ class BatchAuthorityRequest(BaseModel):
                     "116233680",
                     "11652538X",
                     "2091666-8",
+                    "1209690195",
+                    "118526642",
                 ],
                 "limit_per_id": 50,
+                "exclude_beacon_uris": [
+                    "http://tools.wmflabs.org/persondata/beacon/dewiki.txt",
+                    "http://tools.wmflabs.org/persondata/beacon/dewiki_commons.txt",
+                    "http://www.ixtheo.de/docs/ixtheo-beacon.txt",
+                ],
             }
         }
     }
+
 
 class BatchAuthorityResponse(BaseModel):
     requested: int
