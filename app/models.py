@@ -23,7 +23,7 @@ class Record(BaseModel):
     class Config:
         populate_by_name = True
 
-
+# GET single authority_id
 class QueryRequest(BaseModel):
     id: str
     strings: list[str] = Field(default_factory=list)
@@ -35,3 +35,31 @@ class QueryRequest(BaseModel):
 class QueryResponse(BaseModel):
     count: int
     items: list[Record]
+
+
+# POST batch authority_id
+class BatchAuthorityRequest(BaseModel):
+    authority_ids: list[str]
+    limit_per_id: int = 100
+
+    model_config = {
+        "json_schema_extra": {
+            "example": {
+                "authority_ids": [
+                    "111116961",
+                    "129958212",
+                    "118559796",
+                    "116233680",
+                    "11652538X",
+                    "2091666-8",
+                ],
+                "limit_per_id": 50,
+            }
+        }
+    }
+
+class BatchAuthorityResponse(BaseModel):
+    requested: int
+    returned: int
+    missing: list[str]
+    items_by_authority: dict[str, list[dict]]
