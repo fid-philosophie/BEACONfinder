@@ -26,6 +26,7 @@ def _serialize(doc: dict[str, Any]) -> dict[str, Any]:
 async def get_by_authority_batch(payload: BatchAuthorityRequest):
     """
     Query many authority_ids in one request using $in.
+    Supports exclusion list via beacon_uri ($nin).
     Returns items grouped by authority_id and a list of missing IDs.
     """
     col = get_collection()
@@ -44,8 +45,14 @@ async def get_by_authority_batch(payload: BatchAuthorityRequest):
     if not ids:
         raise HTTPException(status_code=400, detail="authority_ids must not be empty")
 
-    # One query for the whole batch
-    query = {"authority_id": {"$in": ids}}
+    # Build query
+    query: dict[str, Any] = {"authority_id": {"$in": ids}}
+
+    # NEW: apply exclusion list: beacon_uri NOT IN exclude_beacon_uris
+    if payload.exclude_beacon_uris:
+        ex = [u.strip() for u in payload.exclude_beacon_uris if u and u.strip()]
+        if ex:
+            query["beacon_uri"] = {"$nin": ex}
 
     cursor = col.find(query)
     docs = [_serialize(d) async for d in cursor]
@@ -58,9 +65,8 @@ async def get_by_authority_batch(payload: BatchAuthorityRequest):
             items_by_authority[aid].append(d)
 
     # Optional cap per authority_id (safety against huge responses)
-    if payload.limit_per_id:
-        for aid in items_by_authority:
-            items_by_authority[aid] = items_by_authority[aid][: payload.limit_per_id]
+    for aid in items_by_authority:
+        items_by_authority[aid] = items_by_authority[aid][: payload.limit_per_id]
 
     missing = [aid for aid in ids if len(items_by_authority[aid]) == 0]
     returned = sum(len(v) for v in items_by_authority.values())
@@ -83,11 +89,24 @@ async def get_by_authority_id(
         description="Authority identifier (e.g. GND).",
         example="11652538X",
     ),
+    # NEW: exclusion list as repeated query parameter:
+    # /by-authority/123?exclude_beacon_uris=a&exclude_beacon_uris=b
+    exclude_beacon_uris: list[str] = Query(
+        default_factory=list,
+        description="Exclude rows where beacon_uri is in this list.",
+        example=["http://tools.wmflabs.org/persondata/beacon/dewiki.txt"],
+    ),
     limit: int = Query(200, ge=1, le=2000),
     skip: int = Query(0, ge=0),
 ):
     col = get_collection()
-    query = {"authority_id": authority_id}
+
+    query: dict[str, Any] = {"authority_id": authority_id}
+
+    if exclude_beacon_uris:
+        ex = [u.strip() for u in exclude_beacon_uris if u and u.strip()]
+        if ex:
+            query["beacon_uri"] = {"$nin": ex}
 
     cursor = col.find(query).skip(skip).limit(limit)
     docs = [_serialize(d) async for d in cursor]
