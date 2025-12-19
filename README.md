@@ -32,6 +32,13 @@ mongodb_db=mydb
 mongodb_collection=records
 ```
 
+## Getting started
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+```
+
 ## Importing BEACONaggregator output
 1. Place the merged Parquet file in a data directory (recommended: `data/`).
 2. Update `PARQUET` in `import_parquet.py` to point to that file.
