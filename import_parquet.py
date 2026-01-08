@@ -1,7 +1,7 @@
 import duckdb
 from pymongo import MongoClient, InsertOne, ASCENDING, DESCENDING
 
-PARQUET = "beacons_merged_20251216-1627.parquet" # make sure to use the correct import
+PARQUET = "beacons_merged_latest.parquet" # make sure to use the correct import
 MONGO_URI = "mongodb://localhost:27017"
 DB, COLL = "mydb", "mycollection"
 
