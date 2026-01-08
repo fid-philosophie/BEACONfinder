@@ -1,9 +1,13 @@
-import duckdb
-from pymongo import MongoClient, InsertOne, ASCENDING, DESCENDING
+import os
+from pathlib import Path
 
-PARQUET = "beacons_merged_latest.parquet" # make sure to use the correct import
-MONGO_URI = "mongodb://localhost:27017"
-DB, COLL = "mydb", "mycollection"
+import duckdb
+from pymongo import MongoClient, InsertOne, ASCENDING
+
+PARQUET = os.getenv("PARQUET_FILE", "data/beacons_merged_latest.parquet")
+MONGO_URI = os.getenv("MONGODB_URI", "mongodb://localhost:27017")
+DB = os.getenv("MONGODB_DB", "mydb")
+COLL = os.getenv("MONGODB_COLLECTION", "mycollection")
 
 BATCH = 50_000  # tune: 10k–200k depending on row width / RAM
 
@@ -17,15 +21,12 @@ BATCH = 50_000  # tune: 10k–200k depending on row width / RAM
 #     authSource="admin",
 # )
 
-uri = "mongodb://appuser:apppass@localhost:27017/mydb?authSource=mydb"
-client = MongoClient(uri)
+client = MongoClient(MONGO_URI)
 
 
-#collection = client["mydb"]["mycollection"]
-collection = client["mydb"]["records"]
+collection = client[DB][COLL]
 
 # flush existing records
-#collection.delete_many({})
 collection.drop()
 
 #client = MongoClient(MONGO_URI)
@@ -35,7 +36,12 @@ con = duckdb.connect()
 con.execute("PRAGMA threads=4")  # optional
 
 # DuckDB can read parquet directly; no pandas dataframe involved
-con.execute(f"CREATE VIEW v AS SELECT * FROM read_parquet('{PARQUET}')")
+parquet_path = Path(PARQUET)
+con.execute(f"CREATE VIEW v AS SELECT * FROM read_parquet('{parquet_path.as_posix()}')")
+
+# Give some feedback on how many rows will be imported
+total = con.execute("SELECT COUNT(*) FROM v").fetchone()[0]
+print(f"About to import {total:,} rows")
 
 offset = 0
 while True:
@@ -55,6 +61,8 @@ while True:
     offset += BATCH
     print(f"Inserted {offset:,} rows")
 
+# Give some feedback so people know what's happening + that the script is not dead
+print(f"Finished importing rows, now creating the index...")
 
 # single-field indexing
 collection.create_index([("authority_id", ASCENDING)], name="authority_id_idx")

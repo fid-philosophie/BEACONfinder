@@ -1,0 +1,14 @@
+.git
+.gitignore
+.venv
+venv
+__pycache__
+*.pyc
+*.log
+.pytest_cache
+.mypy_cache
+dist
+build
+data
+*.parquet
+.env
