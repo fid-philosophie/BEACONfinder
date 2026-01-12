@@ -4,10 +4,10 @@ from pathlib import Path
 import duckdb
 from pymongo import MongoClient, InsertOne, ASCENDING
 
-PARQUET = os.getenv("PARQUET_FILE", "data/beacons_merged_latest.parquet")
-MONGO_URI = os.getenv("MONGODB_URI", "mongodb://localhost:27017")
-DB = os.getenv("MONGODB_DB", "mydb")
-COLL = os.getenv("MONGODB_COLLECTION", "mycollection")
+PARQUET = os.getenv("PARQUET_FILE", default = "data/beacons_merged_latest.parquet")
+MONGO_URI = os.getenv("MONGODB_URI", default = "mongodb://localhost:27017")
+DB = os.getenv("MONGODB_DB", default = "mydb")
+COLL = os.getenv("MONGODB_COLLECTION", default = "mycollection")
 
 BATCH = 50_000  # tune: 10k–200k depending on row width / RAM
 
