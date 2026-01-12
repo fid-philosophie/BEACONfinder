@@ -23,6 +23,11 @@ MONGO_APP_COLLECTION=records
 
 # Importer-specific
 PARQUET_FILE=data/beacons_merged_latest.parquet
+
+# App
+APP_HOST=0.0.0.0
+CONTAINER_PORT=8000
+HOST_PORT=8000
 ```
 
 ## Getting started - via Docker (recommended)
@@ -35,7 +40,7 @@ cp -n .env.example .env
 
 ### Get the newest aggregation (Parquet-file) and put it in `data/beacons_merged_latest.parquet`
 ```bash
-...placeholder...
+...placeholder... (will update this when there is a stable url)
 ```
 
 ### Build and run (API + MongoDB)
