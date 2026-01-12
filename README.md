@@ -6,12 +6,65 @@ Findbuch service that exposes BEACONaggregator output via a small FastAPI API ba
 - `scripts/import_parquet.py`: one-off importer from a merged BEACON Parquet file into MongoDB.
 - `requirements.txt`: runtime dependencies.
 
-## Prerequisites
+
+
+
+## Environment variables
+Create a `.env` file in the repo root (or use the `.env.example`):
+```
+# Mongo credentials & DB
+MONGO_ROOT_USER=root
+MONGO_ROOT_PASSWORD=example
+
+MONGO_APP_USER=appuser
+MONGO_APP_PASSWORD=apppass
+MONGO_APP_DB=mydb
+MONGO_APP_COLLECTION=records
+
+# Importer-specific
+PARQUET_FILE=data/beacons_merged_latest.parquet
+```
+
+## Getting started - via Docker (recommended)
+(from within the project folder / your repo clone)
+
+### Copy the `.env.example`
+```bash
+cp -n .env.example .env
+```
+
+### Get the newest aggregation (Parquet-file) and put it in `data/beacons_merged_latest.parquet`
+```bash
+...placeholder...
+```
+
+### Build and run (API + MongoDB)
+```bash
+docker compose up --build
+```
+
+### Import data in Docker
+Run the importer service against the Docker MongoDB (profiled):
+```bash
+docker compose --profile import run --rm importer
+```
+
+### Test the API
+Open the Swagger UI at:
+```
+http://127.0.0.1:8000/docs
+```
+
+
+
+## Getting started - for local dev
+
+### Prerequisites
 - Python 3.10+
 - MongoDB server (local or remote)
 - `mongosh` (optional, but useful for inspecting the database)
 
-## MongoDB setup
+### MongoDB setup
 You can use any MongoDB instance. Example setup used by this project:
 - database: `mydb`
 - collection: `records`
@@ -24,36 +77,14 @@ sudo apt update
 sudo apt install -y mongodb-mongosh
 ```
 
-## Environment variables
-Create a `.env` file in the repo root:
-```
-mongodb_uri=mongodb://appuser:apppass@localhost:27017/mydb?authSource=mydb
-mongodb_db=mydb
-mongodb_collection=records
-
-# importer defaults (optional)
-MONGODB_URI=mongodb://appuser:apppass@localhost:27017/mydb?authSource=mydb
-MONGODB_DB=mydb
-MONGODB_COLLECTION=records
-PARQUET_FILE=data/beacons_merged_latest.parquet
-
-# docker-compose defaults
-MONGO_ROOT_USER=root
-MONGO_ROOT_PASSWORD=example
-MONGO_APP_DB=mydb
-MONGO_APP_USER=appuser
-MONGO_APP_PASSWORD=apppass
-MONGO_APP_COLLECTION=records
-```
-
-## Getting started
+### Get the venv running (Ubuntu/WSL)
 ```bash
 python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
-## Importing BEACONaggregator output
+### Importing BEACONaggregator output
 1. Place the merged Parquet file in `data/` (recommended).
 2. Set `PARQUET_FILE` in `.env` if the filename differs.
 3. Run the importer:
@@ -62,25 +93,16 @@ pip install -r requirements.txt
    ```
 The importer loads the Parquet file in batches and creates an index on `authority_id`.
 
-## Run the API
+### Run the API
 ```bash
 python -m uvicorn app.main:app --reload
 ```
 
-## Docker
-### Build and run (API + MongoDB)
-```bash
-docker compose up --build
-```
 
-### Import data in Docker
-Run the importer service against the Docker MongoDB (profiled):
-```bash
-docker compose --profile import run --rm importer
-```
-
-## Test the API
+### Test the API
 Open the Swagger UI at:
 ```
 http://127.0.0.1:8000/docs
 ```
+
+
