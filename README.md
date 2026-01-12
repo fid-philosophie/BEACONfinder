@@ -34,9 +34,19 @@ HOST_PORT=8000
 (from within the project folder / your repo clone)
 
 ### Copy the `.env.example`
+
+#### (Git Bash / macOS / Linux)
 ```bash
 cp -n .env.example .env
 ```
+
+#### (Windows PowerShell)
+```bash
+if (-Not (Test-Path .env)) {
+    Copy-Item .env.example .env
+}
+```
+
 
 ### Get the newest aggregation (Parquet-file) and put it in `data/beacons_merged_latest.parquet`
 ```bash
