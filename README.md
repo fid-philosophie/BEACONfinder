@@ -54,10 +54,10 @@ Open the Swagger UI at:
 ```
 http://127.0.0.1:8000/docs
 ```
+(if you changed the port in `.env` you should change it here, too)
 
 
-
-## Getting started - for local dev
+## Getting started - for local dev / deprecated
 
 ### Prerequisites
 - Python 3.10+

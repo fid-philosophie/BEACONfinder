@@ -27,8 +27,10 @@ services:
       MONGODB_URI: mongodb://${MONGO_APP_USER:-appuser}:${MONGO_APP_PASSWORD:-apppass}@mongo:27017/${MONGO_APP_DB:-mydb}?authSource=${MONGO_APP_DB:-mydb}
       MONGODB_DB: ${MONGO_APP_DB:-mydb}
       MONGODB_COLLECTION: ${MONGO_APP_COLLECTION:-records}
+      APP_HOST: ${APP_HOST:-0.0.0.0}
+      CONTAINER_PORT: ${CONTAINER_PORT:-8000}
     ports:
-      - "8000:8000"
+      - "${HOST_PORT:-8000}:${CONTAINER_PORT:-8000}"
 
   importer:
     profiles:
