@@ -20,16 +20,15 @@ class Record(BaseModel):
     project: Optional[str] = None
     source_date: Optional[date] = None
     date_of_export: Optional[datetime] = None
-
-    # New columns you mentioned (optional; harmless even if absent in some docs)
     beacon_uri: Optional[str] = None
     beacon_harvest_timestamp: Optional[datetime] = None
+    name: Optional[str] = None
 
     class Config:
         populate_by_name = True
 
 
-# GET single authority_id (legacy / optional if you still use it elsewhere)
+# GET single authority_id
 class QueryRequest(BaseModel):
     id: str
     strings: list[str] = Field(default_factory=list)
@@ -48,7 +47,7 @@ class BatchAuthorityRequest(BaseModel):
     authority_ids: list[str] = Field(..., min_length=1, max_length=1000)
     limit_per_id: int = Field(default=100, ge=1, le=500)
 
-    # NEW: exclusion list
+    # exclusion list
     exclude_beacon_uris: list[str] = Field(
         default_factory=list,
         description="Exclude rows where beacon_uri is in this list.",
@@ -83,3 +82,8 @@ class BatchAuthorityResponse(BaseModel):
     returned: int
     missing: list[str]
     items_by_authority: dict[str, list[dict]]
+
+
+class DistinctValuesResponse(BaseModel):
+    beacon_uri: list[str]
+    name: list[str]

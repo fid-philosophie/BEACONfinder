@@ -66,3 +66,12 @@ print(f"Finished importing rows, now creating the index...")
 
 # single-field indexing
 collection.create_index([("authority_id", ASCENDING)], name="authority_id_idx")
+print("authority_id_idx created.")
+
+# indexing for distinct beacons
+collection.create_index([("beacon_uri", ASCENDING)], name="beacon_uri_idx")
+print("beacon_uri_idx created.")
+collection.create_index([("NAME", ASCENDING)], name="name_idx")
+print("project_idx created.")
+
+print("All indexes created.")
