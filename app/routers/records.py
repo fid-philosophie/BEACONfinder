@@ -27,7 +27,7 @@ def _serialize(doc: dict[str, Any]) -> dict[str, Any]:
 # Return distinct name/beacon_uris 
 # ----------------------------
 @router.get("/beacons", response_model=BeaconsResponse)
-async def get_distinct_values():
+async def get_beacons():
     global _distinct_values_cache
 
     if _distinct_values_cache is not None:
@@ -35,30 +35,35 @@ async def get_distinct_values():
 
     col = get_collection()
 
-    beacon_uris, projects = await asyncio.gather(
-        col.distinct("beacon_uri"),
-        col.distinct("NAME"),
-    )
-
-    beacon_uris = sorted([
-        v for v in beacon_uris
-        if isinstance(v, str) and v.strip()
-    ])
-
-    projects = sorted([
-        v for v in projects
-        if isinstance(v, str) and v.strip()
-    ])
-
-    # combine into one list of objects
-    max_len = max(len(beacon_uris), len(projects))
+    pipeline = [
+        {
+            "$group": {
+                "_id": {
+                    "beacon_uri": "$beacon_uri",
+                    "project": "$NAME",
+                }
+            }
+        },
+        {
+            "$project": {
+                "_id": 0,
+                "beacon_uri": "$_id.beacon_uri",
+                "project": "$_id.project",
+            }
+        },
+        {
+            "$sort": {
+                "project": 1,
+                "beacon_uri": 1,
+            }
+        },
+    ]
 
     items = []
-
-    for i in range(max_len):
+    async for doc in col.aggregate(pipeline, allowDiskUse=True):
         items.append({
-            "beacon_uri": beacon_uris[i] if i < len(beacon_uris) else None,
-            "project": projects[i] if i < len(projects) else None,
+            "beacon_uri": doc.get("beacon_uri"),
+            "project": doc.get("project"),
         })
 
     _distinct_values_cache = {
