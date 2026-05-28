@@ -23,6 +23,7 @@ class Record(BaseModel):
     beacon_uri: Optional[str] = None
     beacon_harvest_timestamp: Optional[datetime] = None
     name: Optional[str] = None
+    beacon_name: Optional[str] = None
 
     class Config:
         populate_by_name = True
@@ -86,7 +87,7 @@ class BatchAuthorityResponse(BaseModel):
 
 class DistinctItem(BaseModel):
     beacon_uri: Optional[str] = None
-    project: Optional[str] = None
+    beacon_name: Optional[str] = None
 
 
 class BeaconsResponse(BaseModel):

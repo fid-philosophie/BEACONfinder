@@ -40,7 +40,7 @@ async def get_beacons():
             "$group": {
                 "_id": {
                     "beacon_uri": "$beacon_uri",
-                    "project": "$NAME",
+                    "beacon_name": "$NAME",
                 }
             }
         },
@@ -48,12 +48,12 @@ async def get_beacons():
             "$project": {
                 "_id": 0,
                 "beacon_uri": "$_id.beacon_uri",
-                "project": "$_id.project",
+                "beacon_name": "$_id.beacon_name",
             }
         },
         {
             "$sort": {
-                "project": 1,
+                "beacon_name": 1,
                 "beacon_uri": 1,
             }
         },
@@ -63,7 +63,7 @@ async def get_beacons():
     async for doc in col.aggregate(pipeline, allowDiskUse=True):
         items.append({
             "beacon_uri": doc.get("beacon_uri"),
-            "project": doc.get("project"),
+            "beacon_name": doc.get("beacon_name"),
         })
 
     _distinct_values_cache = {
