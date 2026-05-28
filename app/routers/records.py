@@ -8,7 +8,7 @@ from app.db import get_collection
 from app.models import (
     BatchAuthorityRequest,
     BatchAuthorityResponse,
-    DistinctValuesResponse,
+    BeaconsResponse,
 )
 
 router = APIRouter(prefix="/records", tags=["records"])
@@ -26,7 +26,7 @@ def _serialize(doc: dict[str, Any]) -> dict[str, Any]:
 # ----------------------------
 # Return distinct name/beacon_uris 
 # ----------------------------
-@router.get("/distinct-values", response_model=DistinctValuesResponse)
+@router.get("/beacons", response_model=BeaconsResponse)
 async def get_distinct_values():
     global _distinct_values_cache
 
@@ -35,14 +35,35 @@ async def get_distinct_values():
 
     col = get_collection()
 
-    beacon_uris, name = await asyncio.gather(
+    beacon_uris, projects = await asyncio.gather(
         col.distinct("beacon_uri"),
         col.distinct("NAME"),
     )
 
+    beacon_uris = sorted([
+        v for v in beacon_uris
+        if isinstance(v, str) and v.strip()
+    ])
+
+    projects = sorted([
+        v for v in projects
+        if isinstance(v, str) and v.strip()
+    ])
+
+    # combine into one list of objects
+    max_len = max(len(beacon_uris), len(projects))
+
+    items = []
+
+    for i in range(max_len):
+        items.append({
+            "beacon_uri": beacon_uris[i] if i < len(beacon_uris) else None,
+            "project": projects[i] if i < len(projects) else None,
+        })
+
     _distinct_values_cache = {
-        "beacon_uri": sorted([v for v in beacon_uris if isinstance(v, str) and v.strip()]),
-        "name": sorted([v for v in name if isinstance(v, str) and v.strip()]),
+        "count": len(items),
+        "items": items,
     }
 
     return _distinct_values_cache

@@ -84,6 +84,11 @@ class BatchAuthorityResponse(BaseModel):
     items_by_authority: dict[str, list[dict]]
 
 
-class DistinctValuesResponse(BaseModel):
-    beacon_uri: list[str]
-    name: list[str]
+class DistinctItem(BaseModel):
+    beacon_uri: Optional[str] = None
+    project: Optional[str] = None
+
+
+class BeaconsResponse(BaseModel):
+    count: int
+    items: list[DistinctItem]
