@@ -28,6 +28,9 @@ def _serialize(doc: dict[str, Any]) -> dict[str, Any]:
 # ----------------------------
 @router.get("/beacons", response_model=BeaconsResponse)
 async def get_beacons():
+    """
+    Get a list of the beacons included in the aggregation. Each URI + name.
+    """
     global _distinct_values_cache
 
     if _distinct_values_cache is not None:
