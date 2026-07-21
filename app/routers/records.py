@@ -1,4 +1,5 @@
 from typing import Any
+import asyncio
 
 from bson import ObjectId
 from fastapi import APIRouter, HTTPException, Path, Query
@@ -7,16 +8,65 @@ from app.db import get_collection
 from app.models import (
     BatchAuthorityRequest,
     BatchAuthorityResponse,
+    BeaconsResponse,
 )
 
 router = APIRouter(prefix="/records", tags=["records"])
 
+_distinct_values_cache: dict | None = None
 
 def _serialize(doc: dict[str, Any]) -> dict[str, Any]:
     """Convert MongoDB types to JSON-friendly values."""
     if "_id" in doc and isinstance(doc["_id"], ObjectId):
         doc["_id"] = str(doc["_id"])
     return doc
+
+
+
+# ----------------------------
+# Return distinct name/beacon_uris 
+# ----------------------------
+@router.get("/beacons", response_model=BeaconsResponse)
+async def get_distinct_values():
+    global _distinct_values_cache
+
+    if _distinct_values_cache is not None:
+        return _distinct_values_cache
+
+    col = get_collection()
+
+    beacon_uris, projects = await asyncio.gather(
+        col.distinct("beacon_uri"),
+        col.distinct("NAME"),
+    )
+
+    beacon_uris = sorted([
+        v for v in beacon_uris
+        if isinstance(v, str) and v.strip()
+    ])
+
+    projects = sorted([
+        v for v in projects
+        if isinstance(v, str) and v.strip()
+    ])
+
+    # combine into one list of objects
+    max_len = max(len(beacon_uris), len(projects))
+
+    items = []
+
+    for i in range(max_len):
+        items.append({
+            "beacon_uri": beacon_uris[i] if i < len(beacon_uris) else None,
+            "project": projects[i] if i < len(projects) else None,
+        })
+
+    _distinct_values_cache = {
+        "count": len(items),
+        "items": items,
+    }
+
+    return _distinct_values_cache
 
 
 # ----------------------------
@@ -48,7 +98,7 @@ async def get_by_authority_batch(payload: BatchAuthorityRequest):
     # Build query
     query: dict[str, Any] = {"authority_id": {"$in": ids}}
 
-    # NEW: apply exclusion list: beacon_uri NOT IN exclude_beacon_uris
+    # apply exclusion list: beacon_uri NOT IN exclude_beacon_uris
     if payload.exclude_beacon_uris:
         ex = [u.strip() for u in payload.exclude_beacon_uris if u and u.strip()]
         if ex:
@@ -89,7 +139,7 @@ async def get_by_authority_id(
         description="Authority identifier (e.g. GND).",
         example="11652538X",
     ),
-    # NEW: exclusion list as repeated query parameter:
+    # exclusion list as repeated query parameter:
     # /by-authority/123?exclude_beacon_uris=a&exclude_beacon_uris=b
     exclude_beacon_uris: list[str] = Query(
         default_factory=list,

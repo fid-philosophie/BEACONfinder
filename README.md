@@ -1,4 +1,4 @@
-# BEACONfinder_PRIVATE
+# BEACONfinder
 Findbuch service that exposes BEACONaggregator output via a small FastAPI API backed by MongoDB.
 
 ## What this repo contains
