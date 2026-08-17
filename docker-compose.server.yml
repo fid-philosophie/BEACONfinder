@@ -6,8 +6,8 @@ services:
       - .env
     environment:
       MONGODB_URI: ${MONGODB_URI}
-      MONGODB_DB: ${MONGO_APP_DB:-mydb}
-      MONGODB_COLLECTION: ${MONGO_APP_COLLECTION:-records}
+      MONGODB_DB: ${MONGODB_DB:-mydb}
+      MONGODB_COLLECTION: ${MONGODB_COLLECTION:-records}
       APP_HOST: ${APP_HOST:-0.0.0.0}
       CONTAINER_PORT: ${CONTAINER_PORT:-8000}
     extra_hosts:
@@ -23,8 +23,8 @@ services:
       - .env
     environment:
       MONGODB_URI: ${MONGODB_URI}
-      MONGODB_DB: ${MONGO_APP_DB:-mydb}
-      MONGODB_COLLECTION: ${MONGO_APP_COLLECTION:-records}
+      MONGODB_DB: ${MONGODB_DB:-mydb}
+      MONGODB_COLLECTION: ${MONGODB_COLLECTION:-records}
       PARQUET_FILE: ${PARQUET_FILE:-data/beacons_merged_latest.parquet}
     extra_hosts:
       - "host.docker.internal:host-gateway"
