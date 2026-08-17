@@ -1,0 +1,33 @@
+services:
+  api:
+    build: .
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      MONGODB_URI: ${MONGODB_URI}
+      MONGODB_DB: ${MONGO_APP_DB:-mydb}
+      MONGODB_COLLECTION: ${MONGO_APP_COLLECTION:-records}
+      APP_HOST: ${APP_HOST:-0.0.0.0}
+      CONTAINER_PORT: ${CONTAINER_PORT:-8000}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    ports:
+      - "${HOST_PORT:-8000}:${CONTAINER_PORT:-8000}"
+
+  importer:
+    profiles:
+      - import
+    build: .
+    env_file:
+      - .env
+    environment:
+      MONGODB_URI: ${MONGODB_URI}
+      MONGODB_DB: ${MONGO_APP_DB:-mydb}
+      MONGODB_COLLECTION: ${MONGO_APP_COLLECTION:-records}
+      PARQUET_FILE: ${PARQUET_FILE:-data/beacons_merged_latest.parquet}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    command: ["python", "scripts/import_parquet.py"]
+    volumes:
+      - ./data:/app/data:ro
