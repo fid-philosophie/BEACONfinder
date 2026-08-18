@@ -16,11 +16,12 @@ async def startup():
     # indexes are created during the import process only
     pass
 
-@app.get("/debug/client-ip")
-async def debug_client_ip(request: Request):
-    return {
-        "client_host": request.client.host if request.client else None,
-        "x_forwarded_for": request.headers.get("x-forwarded-for"),
-        "x_real_ip": request.headers.get("x-real-ip"),
-        "forwarded": request.headers.get("forwarded"),
-    }
+if settings.enable_debug_endpoints:
+    @app.get("/debug/client-ip")
+    async def debug_client_ip(request: Request):
+        return {
+            "client_host": request.client.host if request.client else None,
+            "x_forwarded_for": request.headers.get("x-forwarded-for"),
+            "x_real_ip": request.headers.get("x-real-ip"),
+            "forwarded": request.headers.get("forwarded"),
+        }
