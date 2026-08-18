@@ -8,7 +8,7 @@ services:
     depends_on:
       - api
     ports:
-      - "127.0.0.1:8081:8080"
+      - "127.0.0.1:${HOST_PORT:-8000}:8080"
     environment:
       <<: *bw-api-env
     networks:
@@ -47,8 +47,6 @@ services:
       ENABLE_DEBUG_ENDPOINTS: ${ENABLE_DEBUG_ENDPOINTS:-false}
     extra_hosts:
       - "host.docker.internal:host-gateway"
-    ports:
-      - "127.0.0.1:${HOST_PORT:-8000}:${CONTAINER_PORT:-8000}"
     networks:
       - bw-services
 
