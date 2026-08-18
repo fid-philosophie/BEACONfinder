@@ -13,7 +13,7 @@ services:
     extra_hosts:
       - "host.docker.internal:host-gateway"
     ports:
-      - "${HOST_PORT:-8000}:${CONTAINER_PORT:-8000}"
+      - "127.0.0.1:${HOST_PORT:-8000}:${CONTAINER_PORT:-8000}"
 
   importer:
     profiles:
