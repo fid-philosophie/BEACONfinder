@@ -11,6 +11,7 @@ class Settings(BaseSettings):
 
     app_host: str = Field("0.0.0.0", env="APP_HOST")
     container_port: int = Field(8000, ge=1, le=65535, env="CONTAINER_PORT")
+    app_root_path: str = Field("", env="APP_ROOT_PATH")
 
 
 settings = Settings()
