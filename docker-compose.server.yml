@@ -1,4 +1,37 @@
+x-bw-api-env: &bw-api-env
+  API_WHITELIST_IP: "127.0.0.0/24 10.20.30.0/24"
+
 services:
+  bunkerweb:
+    image: bunkerity/bunkerweb:1.6.13
+    restart: unless-stopped
+    depends_on:
+      - api
+    ports:
+      - "127.0.0.1:8081:8080"
+    environment:
+      <<: *bw-api-env
+    networks:
+      - bw-universe
+      - bw-services
+
+  bw-scheduler:
+    image: bunkerity/bunkerweb-scheduler:1.6.13
+    restart: unless-stopped
+    depends_on:
+      - bunkerweb
+    environment:
+      <<: *bw-api-env
+      BUNKERWEB_INSTANCES: "bunkerweb"
+      SERVER_NAME: ${DNS_ALIAS:?DNS_ALIAS must be set}
+      USE_REVERSE_PROXY: "yes"
+      REVERSE_PROXY_URL: "/"
+      REVERSE_PROXY_HOST: "http://api:${CONTAINER_PORT:-8000}"
+    volumes:
+      - bw-storage:/data
+    networks:
+      - bw-universe
+
   api:
     build: .
     restart: unless-stopped
@@ -10,10 +43,14 @@ services:
       MONGODB_COLLECTION: ${MONGODB_COLLECTION:-records}
       APP_HOST: ${APP_HOST:-0.0.0.0}
       CONTAINER_PORT: ${CONTAINER_PORT:-8000}
+      APP_ROOT_PATH: ${APP_ROOT_PATH:-}
+      ENABLE_DEBUG_ENDPOINTS: ${ENABLE_DEBUG_ENDPOINTS:-false}
     extra_hosts:
       - "host.docker.internal:host-gateway"
     ports:
       - "127.0.0.1:${HOST_PORT:-8000}:${CONTAINER_PORT:-8000}"
+    networks:
+      - bw-services
 
   importer:
     profiles:
@@ -31,3 +68,19 @@ services:
     command: ["python", "scripts/import_parquet.py"]
     volumes:
       - ./data:/app/data:ro
+
+
+volumes:
+  bw-storage:
+
+
+networks:
+  bw-universe:
+    name: bw-universe
+    ipam:
+      driver: default
+      config:
+        - subnet: 10.20.30.0/24
+
+  bw-services:
+    name: bw-services
