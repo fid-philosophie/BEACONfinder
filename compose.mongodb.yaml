@@ -1,0 +1,40 @@
+services:
+  mongo:
+    image: mongo:7
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_ROOT_USER:-root}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_ROOT_PASSWORD:-example}
+      MONGO_INITDB_DATABASE: ${MONGO_APP_DB:-mydb}
+      MONGO_APP_DB: ${MONGO_APP_DB:-mydb}
+      MONGO_APP_USER: ${MONGO_APP_USER:-appuser}
+      MONGO_APP_PASSWORD: ${MONGO_APP_PASSWORD:-apppass}
+    ports:
+      - "${MONGO_HOST_PORT:-27017}:${MONGO_CONTAINER_PORT:-27017}"
+    volumes:
+      - mongo_data:/data/db
+      - ./docker/mongo-init.sh:/docker-entrypoint-initdb.d/mongo-init.sh:ro
+    networks:
+      - app-network
+
+  api:
+    depends_on:
+      - mongo
+    environment:
+      MONGODB_URI: mongodb://${MONGO_APP_USER:-appuser}:${MONGO_APP_PASSWORD:-apppass}@mongo:${MONGO_CONTAINER_PORT:-27017}/${MONGO_APP_DB:-mydb}?authSource=${MONGO_APP_DB:-mydb}
+      MONGODB_DB: ${MONGO_APP_DB:-mydb}
+      MONGODB_COLLECTION: ${MONGO_APP_COLLECTION:-records}
+
+  importer:
+    depends_on:
+      - mongo
+    environment:
+      MONGODB_URI: mongodb://${MONGO_APP_USER:-appuser}:${MONGO_APP_PASSWORD:-apppass}@mongo:${MONGO_CONTAINER_PORT:-27017}/${MONGO_APP_DB:-mydb}?authSource=${MONGO_APP_DB:-mydb}
+      MONGODB_DB: ${MONGO_APP_DB:-mydb}
+      MONGODB_COLLECTION: ${MONGO_APP_COLLECTION:-records}
+
+
+volumes:
+  mongo_data:

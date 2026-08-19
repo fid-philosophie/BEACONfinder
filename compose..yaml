@@ -1,0 +1,30 @@
+services:
+  api:
+    build: .
+    restart: unless-stopped
+    env_file:
+      - .env
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    ports:
+      - "127.0.0.1:${HOST_PORT:-8000}:${CONTAINER_PORT:-8000}"
+    networks:
+      - app-network
+
+  importer:
+    profiles:
+      - import
+    build: .
+    env_file:
+      - .env
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    command: ["python", "scripts/import_parquet.py"]
+    volumes:
+      - ./data:/app/data:ro
+    networks:
+      - app-network
+
+
+networks:
+  app-network:
