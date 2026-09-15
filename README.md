@@ -5,14 +5,63 @@ Findbuch service that exposes BEACONaggregator output via a small FastAPI API ba
 - `app/`: FastAPI app with MongoDB access and REST endpoints.
 - `scripts/import_parquet.py`: one-off importer from a merged BEACON Parquet file into MongoDB.
 - `requirements.txt`: runtime dependencies.
-
+- optionally [MongoDB](https://github.com/mongodb/mongo) (if you don't have a MongoDB yet) and/or [BunkerWeb](https://github.com/bunkerity/bunkerweb) (for safety measures)
 
 
 
 ## Environment variables
 Create a `.env` file in the repo root (or use the `.env.example`):
+There are 4 different setups you can choose from.
+- setup 1: just the BEACONfinder API (if you already have an instance of MongoDB running)
+- setup 2: adding MongoDB only
+- setup 3: adding BunkerWeb only
+- setup 4: adding a MongoDB instance and BunkerWeb
+You can choose a setup via uncommenting the chosen setup and commenting out the others.
+Depending on the chosen setup you will need to configure different variables (e.g. for connecting MongoDB).
+
 ```
-# Mongo - local Docker setup
+### App
+APP_HOST=0.0.0.0
+CONTAINER_PORT=8000
+HOST_PORT=8000
+
+## Empty locally; e.g. use /api when exposed below /api via reverse proxy
+APP_ROOT_PATH=
+
+## Required for setups using BunkerWeb (setups 3 & 4)
+DNS_ALIAS=<DNS_ALIAS>
+
+# -----------------------------------------------------------------------------
+
+### Importer
+PARQUET_FILE=data/beacons_merged_latest.parquet
+
+# -----------------------------------------------------------------------------
+
+### Debugging
+ENABLE_DEBUG_ENDPOINTS=false
+
+# -----------------------------------------------------------------------------
+
+### Compose setup
+
+## Base only (setup 1)
+COMPOSE_FILE=compose.yaml
+
+## Local MongoDB (setup 2)
+# COMPOSE_FILE=compose.yaml:compose.mongodb.yaml
+
+## BunkerWeb (setup 3)
+# COMPOSE_FILE=compose.yaml:compose.bunkerweb.yaml
+
+## Local MongoDB + BunkerWeb (setup 4)
+# COMPOSE_FILE=compose.yaml:compose.mongodb.yaml:compose.bunkerweb.yaml
+
+# -----------------------------------------------------------------------------
+
+### MongoDB
+
+## Mongo - local Docker setup (setups 2 & 4)
 MONGO_ROOT_USER=root
 MONGO_ROOT_PASSWORD=example
 
@@ -23,19 +72,10 @@ MONGO_APP_COLLECTION=records
 MONGO_HOST_PORT=27017
 MONGO_CONTAINER_PORT=27017
 
-# Mongo - existing server DB
-MONGODB_URI=mongodb://XXXADMIN:XXXPW@host.docker.internal:27017/XXXDB?authSource=admin
-MONGODB_DB=XXXDB
+## Mongo - existing server DB (setups 1 & 3)
+MONGODB_URI=mongodb://<ADMIN_USER>:<ADMIN_PASSWORD>@host.docker.internal:27017/<DB_NAME>?authSource=admin
+MONGODB_DB=<DB_NAME>
 MONGODB_COLLECTION=records
-
-# Importer
-PARQUET_FILE=data/beacons_merged_latest.parquet
-
-# App
-APP_HOST=0.0.0.0
-CONTAINER_PORT=8000
-HOST_PORT=8000
-APP_ROOT_PATH=
 ```
 
 ## Getting started - via Docker (recommended)
@@ -121,4 +161,5 @@ Open the Swagger UI at:
 ```
 http://127.0.0.1:8000/docs
 ```
-(if you changed the port in `.env` you should change it here, too)
+- if you changed the port in `.env` you should change it here, too
+- if you changed app root in `.env` you should change/add it here, too (e.g. http://127.0.0.1:8000/api/docs)
