@@ -1,0 +1,49 @@
+x-bw-api-env: &bw-api-env
+  API_WHITELIST_IP: "127.0.0.0/8 10.20.30.0/24"
+
+services:
+  bunkerweb:
+    image: bunkerity/bunkerweb:1.6.13
+    restart: unless-stopped
+    depends_on:
+      - api
+    ports:
+      - "127.0.0.1:${HOST_PORT:-8000}:8080"
+    environment:
+      <<: *bw-api-env
+    networks:
+      - bw-universe
+      - app-network
+
+  bw-scheduler:
+    image: bunkerity/bunkerweb-scheduler:1.6.13
+    restart: unless-stopped
+    depends_on:
+      - bunkerweb
+    environment:
+      <<: *bw-api-env
+      BUNKERWEB_INSTANCES: "bunkerweb"
+      SERVER_NAME: ${DNS_ALIAS:?DNS_ALIAS must be set}
+      USE_REVERSE_PROXY: "yes"
+      REVERSE_PROXY_URL: "/"
+      REVERSE_PROXY_HOST: "http://api:${CONTAINER_PORT:-8000}"
+    volumes:
+      - bw-storage:/data
+    networks:
+      - bw-universe
+
+  api:
+    ports: !reset []
+
+
+volumes:
+  bw-storage:
+
+
+networks:
+  bw-universe:
+    name: bw-universe
+    ipam:
+      driver: default
+      config:
+        - subnet: 10.20.30.0/24
