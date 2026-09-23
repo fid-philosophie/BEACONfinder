@@ -35,31 +35,33 @@ async def get_distinct_values():
 
     col = get_collection()
 
-    beacon_uris, projects = await asyncio.gather(
-        col.distinct("beacon_uri"),
-        col.distinct("NAME"),
-    )
+    uri_dict = {}
 
-    beacon_uris = sorted([
-        v for v in beacon_uris
-        if isinstance(v, str) and v.strip()
-    ])
+    async for doc in col.find({}, {"beacon_uri": 1, "NAME": 1}):
+        uri = doc.get("beacon_uri")
+        project = doc.get("NAME")
 
-    projects = sorted([
-        v for v in projects
-        if isinstance(v, str) and v.strip()
-    ])
+        # only store if record has uri
+        if not isinstance(uri, str) or not uri.strip():
+            continue
 
-    # combine into one list of objects
-    max_len = max(len(beacon_uris), len(projects))
+        project = project.strip() if isinstance(project, str) else ""
 
-    items = []
+        # add to uri_dict, if key is not present or no project for key in dict:
+        if uri not in uri_dict or (not uri_dict[uri] and project):
+            uri_dict[uri] = project
 
-    for i in range(max_len):
-        items.append({
-            "beacon_uri": beacon_uris[i] if i < len(beacon_uris) else None,
-            "project": projects[i] if i < len(projects) else None,
-        })
+    
+    items = [
+        {"beacon_uri": uri, "project": project}
+        for uri, project in sorted(
+                    uri_dict.items(),
+                    key=lambda item: (
+                        not bool(item[1]), # sort items with project first, 
+                        item[1].casefold(), 
+                        item[0]) 
+                        )
+    ]
 
     _distinct_values_cache = {
         "count": len(items),
