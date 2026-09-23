@@ -4,6 +4,8 @@ import asyncio
 from bson import ObjectId
 from fastapi import APIRouter, HTTPException, Path, Query
 
+from html import unescape
+
 from app.db import get_collection
 from app.models import (
     BatchAuthorityRequest,
@@ -45,7 +47,14 @@ async def get_distinct_values():
         if not isinstance(uri, str) or not uri.strip():
             continue
 
-        project = project.strip() if isinstance(project, str) else ""
+        uri = uri.strip()
+
+        # normalise project name and decode HTML entities
+        project = (
+            unescape(project.strip())
+            if isinstance(project, str)
+            else ""
+        )
 
         # add to uri_dict, if key is not present or no project for key in dict:
         if uri not in uri_dict or (not uri_dict[uri] and project):
@@ -53,7 +62,7 @@ async def get_distinct_values():
 
     
     items = [
-        {"beacon_uri": uri, "project": project}
+        {"beacon_uri": uri, "project": project or uri}
         for uri, project in sorted(
                     uri_dict.items(),
                     key=lambda item: (
