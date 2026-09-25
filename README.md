@@ -34,7 +34,12 @@ DNS_ALIAS=<DNS_ALIAS>
 # -----------------------------------------------------------------------------
 
 ### Importer
-PARQUET_FILE=data/beacons_merged_latest.parquet
+## Keep PARQUET_FILE empty to import from last file in data
+## Follow naming convention (beacons_merged_YYYY-MM-DD.parquet) to import latest data
+## Use PARQUET_FILE to specifiy a particular file for import
+# PARQUET_FILE=data/beacons_merged_latest.parquet
+PARQUET_FILE=
+PARQUET_FOLDER=data
 
 # -----------------------------------------------------------------------------
 
