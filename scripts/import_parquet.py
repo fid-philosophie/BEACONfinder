@@ -53,14 +53,17 @@ print(f"Using parquet file: {parquet_path}")
 
 con.execute(f"CREATE VIEW v AS SELECT * FROM read_parquet('{parquet_path.as_posix()}')")
 
-# Give some feedback on how many rows will be imported
+# Give some feedback on which files and how many rows will be imported
+print(f"PARQUET_FILE env: {PARQUET!r}")
+print(f"PARQUET_FOLDER env: {PARQUET_FOLDER!r}")
+print(f"Selected parquet file: {parquet_path.resolve()}")
 total = con.execute("SELECT COUNT(*) FROM v").fetchone()[0]
 print(f"About to import {total:,} rows")
 
-offset = 0
+inserted = 0
 while True:
     # Fetch a chunk. ORDER BY is optional but helps deterministic paging.
-    rel = con.sql(f"SELECT * FROM v LIMIT {BATCH} OFFSET {offset}")
+    rel = con.sql(f"SELECT * FROM v LIMIT {BATCH} OFFSET {inserted}")
     rows = rel.fetchall()
     if not rows:
         break
@@ -72,8 +75,12 @@ while True:
     # bulk write is faster than insert_many in many cases
     collection.bulk_write([InsertOne(d) for d in docs], ordered=False)
 
-    offset += BATCH
-    print(f"Inserted {offset:,} rows")
+    inserted += len(rows)
+    print(f"Inserted {inserted:,} rows")
+
+
+mongo_count = collection.count_documents({})
+print(f"MongoDB now contains: {mongo_count:,} documents")
 
 # Give some feedback so people know what's happening + that the script is not dead
 print(f"Finished importing rows, now creating the index...")
