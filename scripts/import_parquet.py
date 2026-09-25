@@ -4,7 +4,8 @@ from pathlib import Path
 import duckdb
 from pymongo import MongoClient, InsertOne, ASCENDING
 
-PARQUET = os.getenv("PARQUET_FILE", default = "data/beacons_merged_latest.parquet")
+PARQUET = os.getenv("PARQUET_FILE", default="")
+PARQUET_FOLDER = os.getenv("PARQUET_FOLDER", default="data")
 MONGO_URI = os.getenv("MONGODB_URI", default = "mongodb://localhost:27017")
 DB = os.getenv("MONGODB_DB", default = "mydb")
 COLL = os.getenv("MONGODB_COLLECTION", default = "mycollection")
@@ -22,8 +23,34 @@ collection.drop()
 con = duckdb.connect()
 con.execute("PRAGMA threads=4")  # optional
 
-# DuckDB can read parquet directly; no pandas dataframe involved
-parquet_path = Path(PARQUET)
+# Determine which parquet file to import
+if PARQUET:
+    parquet_path = Path(PARQUET)
+
+    if not parquet_path.is_file():
+        raise FileNotFoundError(
+            f"PARQUET_FILE points to a file that does not exist: {parquet_path}"
+        )
+else:
+    parquet_folder = Path(PARQUET_FOLDER)
+
+    if not parquet_folder.is_dir():
+        raise NotADirectoryError(
+            f"PARQUET_FOLDER does not exist or is not a directory: {parquet_folder}"
+        )
+
+    parquet_files = sorted(parquet_folder.glob("*.parquet"))
+
+    if not parquet_files:
+        raise FileNotFoundError(
+            f"No .parquet files found in PARQUET_FOLDER: {parquet_folder}"
+        )
+
+    # alphabetically last parquet file
+    parquet_path = parquet_files[-1]
+
+print(f"Using parquet file: {parquet_path}")
+
 con.execute(f"CREATE VIEW v AS SELECT * FROM read_parquet('{parquet_path.as_posix()}')")
 
 # Give some feedback on how many rows will be imported
