@@ -11,16 +11,6 @@ COLL = os.getenv("MONGODB_COLLECTION", default = "mycollection")
 
 BATCH = 50_000  # tune: 10k–200k depending on row width / RAM
 
-
-# uri = "mongodb://root:example@localhost:27017/?authSource=admin"
-# client = MongoClient(
-#     host="localhost",
-#     port=27017,
-#     username="root",
-#     password="example",
-#     authSource="admin",
-# )
-
 client = MongoClient(MONGO_URI)
 
 
@@ -28,9 +18,6 @@ collection = client[DB][COLL]
 
 # flush existing records
 collection.drop()
-
-#client = MongoClient(MONGO_URI)
-#collection = client[DB][COLL]
 
 con = duckdb.connect()
 con.execute("PRAGMA threads=4")  # optional
