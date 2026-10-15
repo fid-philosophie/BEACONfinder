@@ -114,6 +114,11 @@ if (-Not (Test-Path .env)) {
 docker compose up --build
 ```
 
+detached mode for production:
+```bash
+docker compose up -d --build
+```
+
 #### Import data in Docker
 Run the importer service against the Docker MongoDB (profiled):
 ```bash
